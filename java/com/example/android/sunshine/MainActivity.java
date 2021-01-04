@@ -1,111 +1,61 @@
-
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.example.android.sunshine;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.android.sunshine.data.SunshinePreferences;
-import com.example.android.sunshine.utilities.ForecastAdapter;
 import com.example.android.sunshine.utilities.NetworkUtils;
 import com.example.android.sunshine.utilities.OpenWeatherJsonUtils;
 
 import java.net.URL;
 
-public class MainActivity extends AppCompatActivity implements ForecastAdapter.ListItemClickListener,
-        SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends AppCompatActivity {
 
-    ProgressBar pb;
-    RecyclerView recyclerView;
-    ForecastAdapter forecastAdapter;
-    boolean PREFERENCES_UPDATED=false;
+    private TextView mWeatherTextView;
+
+    @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forecast);
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this);
-        pb=(ProgressBar) findViewById(R.id.progress_bar);
-        recyclerView= findViewById(R.id.recycler_view);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setHasFixedSize(true);
-        forecastAdapter=new ForecastAdapter(this);
-        recyclerView.setAdapter(forecastAdapter);
+        mWeatherTextView = (TextView) findViewById(R.id.tv_weather_data);
         loadWeatherData();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu,menu);
-        getMenuInflater().inflate(R.menu.refresh,menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if(item.getItemId()==R.id.refresh_button) {
-            Toast.makeText(MainActivity.this, "Refreshing", Toast.LENGTH_LONG).show();
-            loadWeatherData();
-            return true;
-        }
-        else if(item.getItemId()==R.id.action_settings)
-        {
-            Intent i=new Intent(MainActivity.this,SettingsActivity.class);
-            startActivity(i);
-            return true;
-        }
-        return true;
-    }
-
+    @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
     private void loadWeatherData() {
         String location = SunshinePreferences.getPreferredWeatherLocation(this);
         new FetchWeatherTask().execute(location);
-
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (PREFERENCES_UPDATED == true) {
-            loadWeatherData();
-            PREFERENCES_UPDATED=false;
-        }
-    }
-
-    @Override
-    public void onListItemClick(String s)
-    {
-        Intent i=new Intent(MainActivity.this,DetailActivity.class);
-        i.putExtra("SentWeather",s);
-        startActivity(i);
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        PREFERENCES_UPDATED=true;
-    }
-
+    // COMPLETED (5) Create a class that extends AsyncTask to perform network requests
+    @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
     public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
-        @Override
-        protected void onPreExecute() {
-            pb.setVisibility(ProgressBar.VISIBLE);
-        }
 
+        // COMPLETED (6) Override the doInBackground method to perform your network requests
         @Override
         protected String[] doInBackground(String... params) {
 
+            /* If there's no zip code, there's nothing to look up. */
             if (params.length == 0) {
                 return null;
             }
@@ -128,12 +78,18 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapter.L
             }
         }
 
+        // COMPLETED (7) Override the onPostExecute method to display the results of the network request
         @Override
         protected void onPostExecute(String[] weatherData) {
-            pb.setVisibility(View.INVISIBLE);
             if (weatherData != null) {
-
-                forecastAdapter.setWeatherdata(weatherData);
+                /*
+                 * Iterate through the array and append the Strings to the TextView. The reason why we add
+                 * the "\n\n\n" after the String is to give visual separation between each String in the
+                 * TextView. Later, we'll learn about a better way to display lists of data.
+                 */
+                for (String weatherString : weatherData) {
+                    mWeatherTextView.append((weatherString) + "\n\n\n");
+                }
             }
         }
     }

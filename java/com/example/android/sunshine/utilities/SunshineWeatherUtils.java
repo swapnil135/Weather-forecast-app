@@ -58,7 +58,6 @@ public final class SunshineWeatherUtils {
         int temperatureFormatResourceId = R.string.format_temperature_celsius;
 
         if (!SunshinePreferences.isMetric(context)) {
-            Log.e("bool","false");
             temperature = celsiusToFahrenheit(temperature);
             temperatureFormatResourceId = R.string.format_temperature_fahrenheit;
         }
